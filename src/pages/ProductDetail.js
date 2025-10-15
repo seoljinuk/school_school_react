@@ -1,7 +1,7 @@
 /* 
 상품 상세 보기
 전체 화면을 좌우측을 1대2로 분리합니다.
-왼쪽은 상품의 이미지 정보, 오른쪽은 상품의 정보 및 `장바구니`와 `구매하기` 버튼을 만듭니다.
+왼쪽은 상품의 이미지 정보, 오른쪽은 상품의 정보 및 `장바구니`와 `주문하기` 버튼을 만듭니다.
 */
 
 import { Container, Row, Col, Card, Table, Button, Form } from "react-bootstrap";
@@ -24,20 +24,33 @@ function App({ user }) {
 
     // 파라미터 id가 갱신이 되면 화면을 다시 rendering 시킵니다.
     useEffect(() => {
+        if (!user) {
+            alert('로그인이 필요한 서비스입니다.');
+            navigate('/member/login');
+            return;
+        }
+
         const url = `${API_BASE_URL}/product/detail/${id}`;
 
         axios
-            .get(url)
+            .get(url, { withCredentials: true }) // 쿠키, 세션 포함 옵션
             .then((response) => {
                 setProduct(response.data);
                 setLoading(false); // 상품 정보를 읽어 왔습니다.
             })
             .catch((error) => {
                 console.log(error);
-                alert('상품 정보를 불러 오는 중에 오류가 발생하였습니다.');
-                navigate(-1); // 이전 페이지로 이동하기
+
+                if (error.response && error.response.status === 401) { // 401(UnAuthrized)
+                    alert('로그인이 필요한 서비스입니다.');
+                    navigate('/member/login'); // 로그인 페이지로 리다이렉트 
+
+                } else {
+                    alert('상품 정보를 불러 오는 중에 오류가 발생하였습니다.');
+                    navigate(-1); // 이전 페이지로 이동하기
+                }
             });
-    }, [id]);
+    }, [id, user, navigate]);
 
     // 아직 backend에서 읽어 오지 못한 경우를 대비한 코딩입니다.
     if (loading === true) {
@@ -88,7 +101,7 @@ function App({ user }) {
                 quantity: quantity
             };
 
-            const response = await axios.post(url, parameters);
+            const response = await axios.post(url, parameters, { withCredentials: true });
 
             alert(response.data);
             navigate('/product/list'); // 상품 목록 페이지로 이동
@@ -128,7 +141,7 @@ function App({ user }) {
             console.log('주문할 데이터 정보');
             console.log(parameters);
 
-            const response = await axios.post(url, parameters);
+            const response = await axios.post(url, parameters, { withCredentials: true });
             console.log(response.data);
             alert(`${product.name} ${quantity}개를 주문하였습니다.`);
 
@@ -203,7 +216,7 @@ function App({ user }) {
                                 </Col>
                             </Form.Group>
 
-                            {/* 버튼(이전 목록, 장바구니, 구매하기) */}
+                            {/* 버튼(이전 목록, 장바구니, 주문하기) */}
                             <div className="d-flex justify-content-center mt-3">
                                 <Button variant="primary" className="me-3 px-4" href="/product/list">
                                     이전 목록
@@ -230,7 +243,7 @@ function App({ user }) {
                                         }
                                     }}
                                 >
-                                    구매하기
+                                    주문하기
                                 </Button>
                             </div>
                         </Card.Body>

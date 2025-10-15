@@ -133,7 +133,9 @@ function App({ user }) {
 
                         try { // 상품을 삭제 후 다시 상품 목록 페이지를 보여 줍니다.
                             // 주의) 상품을 삭제하려면 반드시 primary key인 상품의 아이디를 넘겨 주어야 합니다.
-                            await axios.delete(`${API_BASE_URL}/product/delete/${item.id}`);
+                            await axios.delete(`${API_BASE_URL}/product/delete/${item.id}`, {
+                                withCredentials: true
+                            });
 
                             // alert 함수(modal 통신)와 비동기 통신 사용시, 화면 갱신에 유의하도록 합니다.
                             alert(`'${item.name}' 상품이 삭제 되었습니다.`);
@@ -142,6 +144,8 @@ function App({ user }) {
                             setProducts(prev => prev.filter(p => p.id !== item.id));
 
                             navigate('/product/list');
+
+                            // 삭제 이후 6개 목록에서 5개로 보이는 문제가 있습니다.
 
                         } catch (error) {
                             console.log(error);
